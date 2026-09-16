@@ -281,15 +281,41 @@ def main():
             sleep(25)
 
             # 5. 点击画面，触发月卡奖励领取
-            ActionChains(driver) \
-                .move_to_element_with_offset(screen, -450, 250) \
-                .click() \
-                .perform()
+            # 每轮：先点 (-450, 250)，等 5 秒，再点 (0, 195)
+reward_rounds = 2
+reward_interval = 5
 
-            print(
-                f"Account {account_no} clicked screen; "
-                f"waiting for reward collection..."
-            )
+for round_index in range(1, reward_rounds + 1):
+    print(
+        f"Account {account_no} reward round "
+        f"{round_index}/{reward_rounds}: click (-450, 250)"
+    )
+
+    ActionChains(driver) \
+        .move_to_element_with_offset(screen, -450, 250) \
+        .click() \
+        .perform()
+
+    sleep(reward_interval)
+
+    print(
+        f"Account {account_no} reward round "
+        f"{round_index}/{reward_rounds}: click (0, 195)"
+    )
+
+    ActionChains(driver) \
+        .move_to_element_with_offset(screen, 0, 195) \
+        .click() \
+        .perform()
+
+    if round_index < reward_rounds:
+        sleep(reward_interval)
+
+print(
+    f"Account {account_no} clicked reward positions "
+    f"{reward_rounds} rounds; "
+    f"waiting for reward collection..."
+)
 
             # 等待奖励请求完成
             sleep(30)
