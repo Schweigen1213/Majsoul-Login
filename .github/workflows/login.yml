@@ -1,18 +1,66 @@
-name: Majsoul-Login
+name: Mahjong Soul Login
+
 on:
+  schedule:
+    # GitHub Actions 使用 UTC 时间
+    # 这里表示北京时间每天 08:00 执行
+    - cron: "0 0 * * *"
+
+  # 允许在 Actions 页面手动运行
   workflow_dispatch:
-  schedule: #5:00
-   - cron: '0 21 * * *'
+
+# 允许 GitHub Actions 向你的 fork 提交日志
+permissions:
+  contents: write
+
+# 防止同一时间重复运行多个任务
+concurrency:
+  group: mahjong-soul-login
+  cancel-in-progress: false
+
 jobs:
   login:
-    name: Majsoul-Login
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      # 拉取你自己的 fork 仓库
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install Selenium
-        run: pip install selenium==4.17.2
+      # 安装 Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Majsoul login
-        run: python login.py ${{ secrets.EMAIL }} ${{ secrets.PASSWD }}
+      # 安装 Selenium
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium
+
+      # 执行登录程序
+      - name: Run Mahjong Soul login
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+          PASSWD: ${{ secrets.PASSWD }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: |
+          python login.py
+
+      # 把日志提交回你自己的 fork
+      - name: Commit and push daily log
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add log.txt
+
+          if git diff --cached --quiet; then
+            echo "没有日志变化，不需要提交"
+          else
+            git commit -m "chore: update login log"
+            git push
+          fi
